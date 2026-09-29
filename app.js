@@ -2,7 +2,7 @@ const express = require('express');
 const hbs = require('hbs');
 const path = require('path');
 const apiRouter = require('./app_api/routes/index');
-const { connectDatabase } = require('./app_server/models/db');
+const { connectDatabase } = require('./app_api/models/db');
 const indexRouter = require('./app_server/routes/index');
 const travelRouter = require('./app_server/routes/travel');
 

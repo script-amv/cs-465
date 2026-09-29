@@ -3,22 +3,29 @@ const assert = require('node:assert/strict');
 const { once } = require('node:events');
 const app = require('../app');
 const hbs = require('hbs');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const { mongoose } = require('../app_api/models/db');
 const trips = require('../data/trips.json');
-const Trip = require('../app_server/models/travlr');
-const { tripsList } = require('../app_api/controllers/trips');
+const Trip = require('../app_api/models/travlr');
 
 let server;
 let baseUrl;
+let mongoServer;
 
 test.before(async () => {
+  mongoServer = await MongoMemoryServer.create();
+  await mongoose.connect(mongoServer.getUri('travlr'));
+  await Trip.insertMany(trips);
   server = app.listen(0, '127.0.0.1');
   await once(server, 'listening');
   const { port } = server.address();
   baseUrl = `http://127.0.0.1:${port}`;
 });
 
-test.after(() => {
-  server.close();
+test.after(async () => {
+  await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  await mongoose.disconnect();
+  await mongoServer.stop();
 });
 
 test('Express serves the Travlr Getaways home page', async () => {
@@ -48,6 +55,7 @@ test('the travel MVC route renders the Handlebars view and partials', async () =
   assert.match(page, /Gale Reef/);
   assert.match(page, /href="\/css\/style\.css"/);
   assert.match(page, /© 2023 by Travlr Getaways/);
+  assert.match(page, /href="\/api\/trips\/GR001"/);
   for (const trip of trips) {
     assert.ok(page.includes(hbs.handlebars.escapeExpression(trip.name)));
     assert.ok(page.includes(hbs.handlebars.escapeExpression(trip.description)));
@@ -94,22 +102,68 @@ test('trip seed data meets the Mongoose schema validation rules', async () => {
   });
 });
 
-test('the trip API controller returns Mongoose data as JSON', async () => {
-  const originalFind = Trip.find;
-  const response = {
-    statusCode: 0,
-    body: null,
-    status(code) { this.statusCode = code; return this; },
-    json(body) { this.body = body; return this; },
-  };
+test('GET /api/trips returns the MongoDB collection as JSON', async () => {
+  const response = await fetch(`${baseUrl}/api/trips`);
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /application\/json/);
+  assert.equal(body.length, trips.length);
+  assert.deepEqual(body.map(trip => trip.code), ['GR001', 'DR002', 'CR003']);
+});
 
-  Trip.find = () => ({ sort: () => ({ lean: async () => trips }) });
+test('GET /api/trips/:tripCode returns exactly one matching trip', async () => {
+  const response = await fetch(`${baseUrl}/api/trips/DR002`);
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.code, 'DR002');
+  assert.equal(body.name, "Dawson's Reef");
+  assert.equal(body.perPerson, 699);
+});
+
+test('trip API reports invalid and missing codes with HTTP status codes', async () => {
+  const invalid = await fetch(`${baseUrl}/api/trips/!bad`);
+  assert.equal(invalid.status, 400);
+  assert.deepEqual(await invalid.json(), { message: 'Invalid trip code.' });
+  const missing = await fetch(`${baseUrl}/api/trips/ZZ999`);
+  assert.equal(missing.status, 404);
+  assert.deepEqual(await missing.json(), { message: 'Trip not found.' });
+});
+
+test('travel page reads newly stored trips through the API', async () => {
+  await Trip.create({ ...trips[0], _id: undefined, code: 'NR004', name: 'New Reef' });
   try {
-    await tripsList({}, response);
+    const page = await (await fetch(`${baseUrl}/travel`)).text();
+    assert.match(page, /New Reef/);
+    assert.match(page, /href="\/api\/trips\/NR004"/);
+  } finally {
+    await Trip.deleteOne({ code: 'NR004' });
+  }
+});
+
+test('empty database gives a 404 JSON response and a helpful travel page', async () => {
+  const records = await Trip.find().lean();
+  await Trip.deleteMany({});
+  try {
+    const response = await fetch(`${baseUrl}/api/trips`);
+    assert.equal(response.status, 404);
+    const page = await (await fetch(`${baseUrl}/travel`)).text();
+    assert.match(page, /No trips are available right now/);
+  } finally {
+    await Trip.insertMany(records);
+  }
+});
+
+test('database failures return a 500 JSON error and 503 travel page', async () => {
+  const originalFind = Trip.find;
+  Trip.find = () => { throw new Error('Simulated database failure'); };
+  try {
+    const apiResponse = await fetch(`${baseUrl}/api/trips`);
+    assert.equal(apiResponse.status, 500);
+    assert.deepEqual(await apiResponse.json(), { message: 'Unable to retrieve trips.' });
+    const pageResponse = await fetch(`${baseUrl}/travel`);
+    assert.equal(pageResponse.status, 503);
+    assert.match(await pageResponse.text(), /Trips could not be loaded right now/);
   } finally {
     Trip.find = originalFind;
   }
-
-  assert.equal(response.statusCode, 200);
-  assert.deepEqual(response.body, trips);
 });

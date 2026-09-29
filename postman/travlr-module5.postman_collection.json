@@ -1,0 +1,40 @@
+{
+  "info": {
+    "name": "Travlr Module Five API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "All trips",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/trips" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Collection returns 200', () => pm.response.to.have.status(200));",
+        "pm.test('Three trips return as JSON', () => { const trips = pm.response.json(); pm.expect(trips).to.be.an('array').with.lengthOf(3); pm.expect(trips.map(t => t.code)).to.include.members(['GR001', 'DR002', 'CR003']); });"
+      ] } }]
+    },
+    {
+      "name": "One trip by code",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/trips/DR002" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Specific trip returns 200', () => pm.response.to.have.status(200));",
+        "pm.test('Response is one matching JSON object', () => { const trip = pm.response.json(); pm.expect(trip).to.be.an('object'); pm.expect(trip.code).to.eql('DR002'); pm.expect(trip.name).to.eql(\"Dawson's Reef\"); });"
+      ] } }]
+    },
+    {
+      "name": "Unknown trip",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/trips/ZZ999" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Unknown trip returns 404', () => pm.response.to.have.status(404));",
+        "pm.test('Error is JSON', () => pm.expect(pm.response.json().message).to.eql('Trip not found.'));"
+      ] } }]
+    },
+    {
+      "name": "Malformed trip code",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/trips/invalid" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Malformed code returns 400', () => pm.response.to.have.status(400));",
+        "pm.test('Error is JSON', () => pm.expect(pm.response.json().message).to.eql('Invalid trip code.'));"
+      ] } }]
+    }
+  ]
+}

@@ -7,12 +7,12 @@
               <ul id="sites">
                 {{#each trips}}
                 <li>
-                  <a href="/travel"><img src="/images/{{this.image}}" alt="{{this.name}}"></a>
-                  <h2><a href="/travel">{{this.name}}</a></h2>
+                  <a href="/api/trips/{{this.code}}"><img src="/images/{{this.image}}" alt="{{this.name}}"></a>
+                  <h2><a href="/api/trips/{{this.code}}">{{this.name}}</a></h2>
                   <p style="white-space: pre-line">{{this.description}}</p>
                 </li>
                 {{else}}
-                <li><p>No trips are available right now.</p></li>
+                <li><p>{{#if message}}{{message}}{{else}}No trips are available right now.{{/if}}</p></li>
                 {{/each}}
               </ul>
             </div>

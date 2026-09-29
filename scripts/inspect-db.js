@@ -1,5 +1,5 @@
-const { connectDatabase, gracefulShutdown } = require('../app_server/models/db');
-const Trip = require('../app_server/models/travlr');
+const { connectDatabase, gracefulShutdown } = require('../app_api/models/db');
+const Trip = require('../app_api/models/travlr');
 
 async function inspectDatabase() {
   await connectDatabase();
