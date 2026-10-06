@@ -8,10 +8,24 @@ const travelRouter = require('./app_server/routes/travel');
 
 const app = express();
 const port = process.env.PORT || 3000;
+const adminOrigins = new Set(['http://localhost:4200', 'http://127.0.0.1:4200']);
 
 app.set('views', path.join(__dirname, 'app_server', 'views'));
 app.set('view engine', 'hbs');
 hbs.registerPartials(path.join(__dirname, 'app_server', 'views', 'partials'));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use('/api', (req, res, next) => {
+  if (adminOrigins.has(req.headers.origin)) {
+    res.set('Access-Control-Allow-Origin', req.headers.origin);
+    res.set('Vary', 'Origin');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.set('Access-Control-Allow-Headers', 'Content-Type');
+  }
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  return next();
+});
 
 app.use('/', indexRouter);
 app.use('/travel', travelRouter);

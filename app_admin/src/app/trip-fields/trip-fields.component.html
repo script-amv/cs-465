@@ -1,0 +1,57 @@
+<div [formGroup]="form" class="row g-3">
+  <div class="col-md-4">
+    <label for="code" class="form-label">Trip code</label>
+    <input id="code" class="form-control" formControlName="code" maxlength="5" placeholder="AB123"
+      [class.is-invalid]="form.controls['code'].invalid && form.controls['code'].touched">
+    <div class="invalid-feedback">Use two letters and three digits.</div>
+  </div>
+  <div class="col-md-8">
+    <label for="name" class="form-label">Trip name</label>
+    <input id="name" class="form-control" formControlName="name"
+      [class.is-invalid]="form.controls['name'].invalid && form.controls['name'].touched">
+    <div class="invalid-feedback">Enter a trip name.</div>
+  </div>
+  <div class="col-md-4">
+    <label for="length" class="form-label">Length</label>
+    <input id="length" class="form-control" formControlName="length" placeholder="7 days / 6 nights"
+      [class.is-invalid]="form.controls['length'].invalid && form.controls['length'].touched">
+    <div class="invalid-feedback">Enter the trip length.</div>
+  </div>
+  <div class="col-md-4">
+    <label for="start" class="form-label">Start date</label>
+    <input id="start" type="date" class="form-control" formControlName="start"
+      [class.is-invalid]="form.controls['start'].invalid && form.controls['start'].touched">
+    <div class="invalid-feedback">Select a start date.</div>
+  </div>
+  <div class="col-md-4">
+    <label for="perPerson" class="form-label">Price per person (USD)</label>
+    <input id="perPerson" type="number" min="0" step="1" class="form-control" formControlName="perPerson"
+      [class.is-invalid]="form.controls['perPerson'].invalid && form.controls['perPerson'].touched">
+    <div class="invalid-feedback">Enter a price of zero or more.</div>
+  </div>
+  <div class="col-md-6">
+    <label for="resort" class="form-label">Resort</label>
+    <input id="resort" class="form-control" formControlName="resort"
+      [class.is-invalid]="form.controls['resort'].invalid && form.controls['resort'].touched">
+    <div class="invalid-feedback">Enter a resort.</div>
+  </div>
+  <div class="col-md-6">
+    <label for="image" class="form-label">Trip image</label>
+    <select id="image" class="form-select" formControlName="image"
+      [class.is-invalid]="form.controls['image'].invalid && form.controls['image'].touched">
+      <option value="">Select an image</option>
+      <option value="reef1.jpg">Gale Reef</option>
+      <option value="reef2.jpg">Dawson's Reef</option>
+      <option value="reef3.jpg">Claire's Reef</option>
+      <option value="sea-sound.jpg">Sea Sound</option>
+      <option value="kayak.jpg">Kayak</option>
+    </select>
+    <div class="invalid-feedback">Select a trip image.</div>
+  </div>
+  <div class="col-12">
+    <label for="description" class="form-label">Description</label>
+    <textarea id="description" class="form-control" formControlName="description"
+      [class.is-invalid]="form.controls['description'].invalid && form.controls['description'].touched"></textarea>
+    <div class="invalid-feedback">Enter a description.</div>
+  </div>
+</div>

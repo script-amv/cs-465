@@ -108,7 +108,7 @@ test('GET /api/trips returns the MongoDB collection as JSON', async () => {
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /application\/json/);
   assert.equal(body.length, trips.length);
-  assert.deepEqual(body.map(trip => trip.code), ['GR001', 'DR002', 'CR003']);
+  assert.deepEqual(body.map(trip => trip.code), ['GR001', 'DR002', 'PB004', 'CR003']);
 });
 
 test('GET /api/trips/:tripCode returns exactly one matching trip', async () => {
@@ -166,4 +166,71 @@ test('database failures return a 500 JSON error and 503 travel page', async () =
   } finally {
     Trip.find = originalFind;
   }
+});
+
+test('admin origin can call all trip API methods', async () => {
+  const response = await fetch(`${baseUrl}/api/trips`, {
+    method: 'OPTIONS',
+    headers: { Origin: 'http://localhost:4200', 'Access-Control-Request-Method': 'PUT' },
+  });
+  assert.equal(response.status, 204);
+  assert.equal(response.headers.get('access-control-allow-origin'), 'http://localhost:4200');
+  assert.match(response.headers.get('access-control-allow-methods'), /DELETE/);
+});
+
+test('POST, PUT, and DELETE trips update the database, API, and public page', async () => {
+  const code = 'NT004';
+  const newTrip = { ...trips[0], code, name: 'New Travlr Trip', perPerson: 799 };
+
+  try {
+    const created = await fetch(`${baseUrl}/api/trips`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newTrip),
+    });
+    assert.equal(created.status, 201);
+    assert.equal((await created.json()).code, code);
+    assert.equal((await Trip.findOne({ code })).name, 'New Travlr Trip');
+    assert.match(await (await fetch(`${baseUrl}/travel`)).text(), /New Travlr Trip/);
+
+    const duplicate = await fetch(`${baseUrl}/api/trips`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newTrip),
+    });
+    assert.equal(duplicate.status, 409);
+
+    const invalid = await fetch(`${baseUrl}/api/trips`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newTrip, code: 'BAD', perPerson: -1 }),
+    });
+    assert.equal(invalid.status, 400);
+
+    const updated = await fetch(`${baseUrl}/api/trips/${code}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...newTrip, name: 'Updated Travlr Trip', perPerson: 899 }),
+    });
+    assert.equal(updated.status, 200);
+    assert.equal((await updated.json()).name, 'Updated Travlr Trip');
+    assert.equal((await (await fetch(`${baseUrl}/api/trips/${code}`)).json()).perPerson, 899);
+    const updatedPage = await (await fetch(`${baseUrl}/travel`)).text();
+    assert.match(updatedPage, /Updated Travlr Trip/);
+    assert.doesNotMatch(updatedPage, /New Travlr Trip/);
+
+    const deleted = await fetch(`${baseUrl}/api/trips/${code}`, { method: 'DELETE' });
+    assert.equal(deleted.status, 204);
+    assert.equal((await fetch(`${baseUrl}/api/trips/${code}`)).status, 404);
+    assert.doesNotMatch(await (await fetch(`${baseUrl}/travel`)).text(), /Updated Travlr Trip/);
+  } finally {
+    await Trip.deleteOne({ code });
+  }
+});
+
+test('write routes reject invalid and missing trip codes', async () => {
+  assert.equal((await fetch(`${baseUrl}/api/trips/invalid`, { method: 'PUT' })).status, 400);
+  assert.equal((await fetch(`${baseUrl}/api/trips/ZZ999`, { method: 'PUT' })).status, 404);
+  assert.equal((await fetch(`${baseUrl}/api/trips/invalid`, { method: 'DELETE' })).status, 400);
+  assert.equal((await fetch(`${baseUrl}/api/trips/ZZ999`, { method: 'DELETE' })).status, 404);
 });

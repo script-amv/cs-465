@@ -1,0 +1,21 @@
+body {
+  background: #f4f7fa;
+  color: #203548;
+}
+
+.page-heading {
+  color: #133b5c;
+}
+
+.trip-photo {
+  height: 190px;
+  object-fit: cover;
+}
+
+.form-card {
+  max-width: 900px;
+}
+
+textarea {
+  min-height: 130px;
+}

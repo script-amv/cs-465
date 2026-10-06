@@ -31,5 +31,16 @@
     "perPerson": 1099,
     "image": "reef3.jpg",
     "description": "Claire's Reef: Donec sed felis risus. Nulla facilisi. Donec a orci tellus, et auctor odio. Fusce ac orci nibh, quis semper arcu. Cras orci neque, euismod et accumsan ac, sagittis molestie lorem.\n\nVulputate eget libero. In hac habitasse platea dictumst. Integer purus justo, egestas eu consectetur eu, cursus in tortor. Quisque nec nunc ac mi ultrices iaculis."
+  },
+  {
+    "_id": "66f000000000000000000004",
+    "code": "PB004",
+    "name": "Palm Bay Escape Updated",
+    "length": "6 nights / 7 days",
+    "start": "2026-12-20T00:00:00.000Z",
+    "resort": "Palm Bay Resort",
+    "perPerson": 929,
+    "image": "reef3.jpg",
+    "description": "A refreshed week by the reef with guided snorkeling, beach time, and a sunset cruise."
   }
 ]

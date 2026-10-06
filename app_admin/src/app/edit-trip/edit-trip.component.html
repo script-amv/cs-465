@@ -1,0 +1,15 @@
+<div class="card form-card shadow-sm mx-auto">
+  <div class="card-body p-4">
+    <h1 class="page-heading h2 mb-1">Edit trip</h1>
+    <p class="text-muted mb-4">Update the trip details and save them to the database.</p>
+    <div *ngIf="loading" class="alert alert-info" role="status">Loading trip...</div>
+    <div *ngIf="error" class="alert alert-danger" role="alert">{{ error }}</div>
+    <form *ngIf="!loading && !error" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <app-trip-fields [form]="form"></app-trip-fields>
+      <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-primary" type="submit" [disabled]="saving">{{ saving ? 'Saving...' : 'Update trip' }}</button>
+        <a class="btn btn-outline-secondary" routerLink="/">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>

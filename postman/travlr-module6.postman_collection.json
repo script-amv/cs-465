@@ -1,0 +1,69 @@
+{
+  "info": {
+    "name": "Travlr Module Six CRUD API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List trips",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/trips" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('GET list returns 200', () => pm.response.to.have.status(200));",
+        "pm.test('Seed trips are present', () => pm.expect(pm.response.json()).to.be.an('array').with.lengthOf(4));"
+      ] } }]
+    },
+    {
+      "name": "Add trip",
+      "request": {
+        "method": "POST", "url": "{{baseUrl}}/api/trips",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"code\":\"PM006\",\"name\":\"Postman Reef\",\"length\":\"7 days / 6 nights\",\"start\":\"2026-11-12\",\"resort\":\"Gale Reef\",\"perPerson\":899,\"image\":\"reef3.jpg\",\"description\":\"A test trip for the Module Six API.\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('POST returns 201', () => pm.response.to.have.status(201));",
+        "pm.test('New trip is returned as JSON', () => pm.expect(pm.response.json().code).to.eql('PM006'));"
+      ] } }]
+    },
+    {
+      "name": "Get new trip",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/trips/PM006" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('GET one returns 200', () => pm.response.to.have.status(200));",
+        "pm.test('Added trip is stored', () => pm.expect(pm.response.json().name).to.eql('Postman Reef'));"
+      ] } }]
+    },
+    {
+      "name": "Update trip",
+      "request": {
+        "method": "PUT", "url": "{{baseUrl}}/api/trips/PM006",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\"code\":\"PM006\",\"name\":\"Updated Postman Reef\",\"length\":\"7 days / 6 nights\",\"start\":\"2026-11-12\",\"resort\":\"Gale Reef\",\"perPerson\":999,\"image\":\"reef3.jpg\",\"description\":\"An updated test trip for the Module Six API.\"}" }
+      },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('PUT returns 200', () => pm.response.to.have.status(200));",
+        "pm.test('Updated values are returned', () => { const trip = pm.response.json(); pm.expect(trip.name).to.eql('Updated Postman Reef'); pm.expect(trip.perPerson).to.eql(999); });"
+      ] } }]
+    },
+    {
+      "name": "Get updated trip",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/trips/PM006" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Update persisted', () => pm.expect(pm.response.json().name).to.eql('Updated Postman Reef'));"
+      ] } }]
+    },
+    {
+      "name": "Delete trip",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/api/trips/PM006" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('DELETE returns 204', () => pm.response.to.have.status(204));"
+      ] } }]
+    },
+    {
+      "name": "Confirm deletion",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/trips/PM006" },
+      "event": [{ "listen": "test", "script": { "exec": [
+        "pm.test('Deleted trip returns 404', () => pm.response.to.have.status(404));"
+      ] } }]
+    }
+  ]
+}
